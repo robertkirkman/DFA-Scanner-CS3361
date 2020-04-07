@@ -8,6 +8,12 @@
  * storing a deterministic finite automaton from it.
  */
 
+#define TOKENSTOPRINT_LEN 100
+
+#define MOVE 1
+#define RECOGNIZE 2
+#define STUCK 3
+
 struct transitionTripleStruct;
 typedef struct transitionTripleStruct transitionTriple;
 struct tokenPairStruct;
@@ -19,23 +25,19 @@ Automaton *newAutomaton(void);
 void deleteAutomaton(Automaton *automatonPtr);
 void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr);
 void buildCharArr(char *automatonFileStr, int *automatonFileCharIndex,
-    Automaton *automatonPtr, int *automatonCharIndex);
+    Automaton *automatonPtr);
 void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
-    Automaton *automatonPtr, int *automatonStateIndex);
+    Automaton *automatonPtr);
 void buildFinalStateArr(char *automatonFileStr,
-    int *automatonFileFinalStateIndex, Automaton *automatonPtr,
-    int *automatonFinalStateIndex);
+    int *automatonFileFinalStateIndex, Automaton *automatonPtr);
 void setInitialState(char *automatonFileStr,
     int *automatonFileInitialStateIndex, Automaton *automatonPtr);
 void buildTransitionArr(char *automatonFileStr,
-    int *automatonFileTransitionsIndex, Automaton *automatonPtr,
-    int *automatonTransitionIndex);
+    int *automatonFileTransitionsIndex, Automaton *automatonPtr);
 void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
-    Automaton *automatonPtr, int *automatonTokenIndex);
-void buildTransitionTriple(char *automatonFileStr,
-    int *automatonFileTripleIndex, Automaton *automatonPtr);
-void buildTokenPair(char *automatonFileStr, int *automatonFileTokenIndex,
     Automaton *automatonPtr);
+void buildTransitionTriple(char *transitionTripleStr, Automaton *automatonPtr);
+void buildTokenPair(char *tokenPairStr, Automaton *automatonPtr);
 void getSubStr(char *str, char *subStr, int count, int startIndex);
 void delSubstr(char *str, int count, int startIndex);
 void delComments(char *str);

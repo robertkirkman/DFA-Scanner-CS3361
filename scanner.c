@@ -66,9 +66,11 @@ int main(int argc, char **argv)
         printf("error: memory allocation error.\n");
         return 1;
     }
-    buildAutomaton(automatonFileBuf, automatonPtr);
+    buildAutomaton(&automatonFileBuf[0], automatonPtr);
+    char tokensToPrint[TOKENSTOPRINT_LEN] = "";
     //printf("%s\n", automatonFileBuf);
-
+    //scanTokens(tokensFileBuf, automatonPtr, &tokensToPrint[0]);
+    //printf("%s\n", tokensToPrint);
 
     free(automatonFileBuf);
     deleteAutomaton(automatonPtr);
