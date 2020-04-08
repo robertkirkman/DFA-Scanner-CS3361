@@ -1,6 +1,6 @@
 /* Filename: automaton.c
  * Author: Robert Kirkman
- * Author of delComments function: Connor Irvine
+ * Author of delComments() function: Connor Irvine
  * Class: CS 3361-001
  * Professor: Dr. Yuanlin Zhang
  * Assignment: Project 1
@@ -8,14 +8,14 @@
  * necessary for parsing a formatted text file and constructing and storing a
  * deterministic finite automaton from it.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 #include "automaton.h"
-
+//struct definitions for Automaton data type
 struct transitionTripleStruct
 {
     int currentState, nextState;
@@ -24,29 +24,66 @@ struct transitionTripleStruct
 struct tokenPairStruct
 {
     int finalState;
-    char tokenStr[20];
+    char tokenStr[TOKENSTR_MAXLEN];
 };
 struct AutomatonStruct
 {
-    char charArr[20];
-    int stateArr[20], finalStateArr[20], charCount, stateCount, finalStateCount,
-        initialState, transitionCount, tokenCount;
-    transitionTriple transitionArr[400];
-    tokenPair tokenArr[20];
+    char charArr[CHARARR_MAXLEN];
+    int stateArr[STATEARR_MAXLEN], finalStateArr[STATEARR_MAXLEN], charCount,
+        stateCount, finalStateCount, initialState, transitionCount, tokenCount;
+    transitionTriple transitionArr[TRANSITIONARR_MAXLEN];
+    tokenPair tokenArr[STATEARR_MAXLEN];
 };
+//Function definitons for parsing the buffer of the automaton file into the
+//Automaton data structure
+/*
+ * Function: Automaton *newAutomaton(void)
+ * Parameters:
+ *     automatonPtr: a pointer to the Automaton data structure to be allocated
+ * Return value: new pointer to the newly allocated automatonPtr
+ * Description: This function handles memory allocation for the automatonPtr.
+ */
 Automaton *newAutomaton(void)
 {
     Automaton *newAutomatonPtr = malloc(sizeof(Automaton));
     return newAutomatonPtr;
 }
+/*
+ * Function: void deleteAutomaton(Automaton *automatonPtr)
+ * Parameters:
+ *     automatonPtr: a pointer to the Automaton data structure to be freed
+ * Return value: none.
+ * Description: This function handles memory deallocation for the automatonPtr.
+ */
 void deleteAutomaton(Automaton *automatonPtr)
 {
     free(automatonPtr);
 }
+/*
+ * Function: void buildAutomaton(char *automatonFileStr,
+ *     Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing a text-based
+ *         representation of an arbitrary deterministic finite automaton.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {%c,...}\n{%d,...}
+ * \n{%d}\n{%d,...}\n{(%d,%s,%d),...}\n{(%d,%s),...}
+ * where %c are characters, %d are integers with possibly more than two digits,
+ * and %s are strings consisting only of alphabetical characters and stores the
+ * parsed data in the data structure pointed to by automatonPtr.
+ */
 void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr)
 {
+    //shared index incremented by all the functions to step through the buffer
     int automatonFileIndex = 0;
+    //completely remove comments from the buffer before doing anything else
+    //to ensure comments to not interfere with the parsing
     delComments(automatonFileStr);
+    //the functions must be called in this order to correctly build the
+    //Automaton, since the six data sets they are associated with are given in
+    //this order by the syntax shown in the specification.
     buildCharArr(automatonFileStr, &automatonFileIndex, automatonPtr);
     buildStateArr(automatonFileStr, &automatonFileIndex, automatonPtr);
     setInitialState(automatonFileStr, &automatonFileIndex, automatonPtr);
@@ -69,15 +106,32 @@ void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr)
         printf("\n%d %s", automatonPtr->tokenArr[i].finalState,
                             automatonPtr->tokenArr[i].tokenStr);
 }
-//buildCharArr, buildStateArr, buildFinalStateArr, and setInitialState could
-//benefit from the use of ctype.h functions
+//buildCharArr(), buildStateArr(), buildFinalStateArr(), and setInitialState()
+//could benefit from the use of ctype.h functions
+/*
+ * Function: void buildCharArr(char *automatonFileStr,
+ *     int *automatonFileCharIndex, Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing a set of transition
+ *         characters for a DFA at the offset indicated by
+ *         automatonFileCharIndex.
+ *     automatonFileCharIndex: the index of automatonFileStr indicating
+ *         the offset at which the set of transition characters begins.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {%c,...}
+ * at the indicated index where %c are characters and stores the parsed data in
+ * the data structure pointed to by automatonPtr. It also advances
+ * automatonFileCharIndex to the end of the set.
+ */
 void buildCharArr(char *automatonFileStr, int *automatonFileCharIndex,
     Automaton *automatonPtr)
 {
     automatonPtr->charCount = 0;
     int automatonFileStrLen = strlen(automatonFileStr);
     while (automatonFileStr[*automatonFileCharIndex] != '}' &&
-        automatonPtr->charCount < 20 && *automatonFileCharIndex <
+        automatonPtr->charCount < CHARARR_MAXLEN && *automatonFileCharIndex <
         automatonFileStrLen)
     {
         if (automatonFileStr[*automatonFileCharIndex] == '{' ||
@@ -89,16 +143,33 @@ void buildCharArr(char *automatonFileStr, int *automatonFileCharIndex,
     }
     (*automatonFileCharIndex)++;
 }
-//These functions, like the Automata data structure, only support up to 20
-//states.
-//This is out of specification, which states "Each state is a number with
-//possibly more than two digits." Please rewrite.
+//These functions, like the Automata data structure, only support up to
+//STATEARR_MAXLEN states. This is out of specification, which states "Each
+//state is a number with possibly more than two digits." Please rewrite.
+/*
+ * Function: void buildStateArr(char *automatonFileStr,
+ *     int *automatonFileStateIndex, Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing a set of states for
+ *         a DFA at the offset indicated by automatonFileStateIndex.
+ *     automatonFileStateIndex: the index of automatonFileStr indicating
+ *         the offset at which the set of states begins.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {%d,...}
+ * at the indicated index where %d are integers with possibly more than two
+ * digits and stores the parsed data in the data structure pointed to by
+ * automatonPtr. It also advances automatonFileStateIndex to the end of the set.
+ */
 void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
     Automaton *automatonPtr)
 {
     int i = 0, j = 0, automatonFileStrLen = strlen(automatonFileStr),
         stateStrIndex = ++(*automatonFileStateIndex);
-    char currStateSubStr[3] = "\0\0";
+    int stateSubStrLen = getDigitCount(STATEARR_MAXLEN);
+    char currStateSubStr[stateSubStrLen];
+    initStr(currStateSubStr, stateSubStrLen);
     while (automatonFileStr[++(*automatonFileStateIndex)] != '}' &&
         *automatonFileStateIndex < automatonFileStrLen)
         i++;
@@ -118,18 +189,33 @@ void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
             else
             {
                 j = 0;
-                if (automatonPtr->stateCount < 20)
+                if (automatonPtr->stateCount < STATEARR_MAXLEN)
                     automatonPtr->stateArr[(automatonPtr->stateCount)++] =
                         atoi(currStateSubStr);
                 else break;
                 //printf("%d \n", automatonPtr->stateCount);
-                char resetStateSubStr[3] = "\0\0";
-                memcpy(currStateSubStr, resetStateSubStr,
-                    sizeof(resetStateSubStr));
+                initStr(currStateSubStr, stateSubStrLen);
             }
         }
     }
 }
+/*
+ * Function: void setInitialState(char *automatonFileStr,
+ *     int *automatonFileInitialStateIndex, Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing an initial state for
+ *         a DFA at the offset indicated by automatonFileFinalStateIndex.
+ *     automatonFileInitialStateIndex: the index of automatonFileStr indicating
+ *         the offset at which the final state begins.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {%d}
+ * at the indicated index where %d is an integer with possibly more than two
+ * digits and stores the parsed data in the data structure pointed to by
+ * automatonPtr. It also advances automatonFileInitialStateIndex to the end of
+ * the set.
+ */
 void setInitialState(char *automatonFileStr,
     int *automatonFileInitialStateIndex, Automaton *automatonPtr)
 {
@@ -146,12 +232,31 @@ void setInitialState(char *automatonFileStr,
     automatonPtr->initialState = atoi(initialStateStr);
 }
 //This function is mostly identical to buildStateArr(). Please refactor.
+/*
+ * Function: void buildFinalStateArr(char *automatonFileStr,
+ *     int *automatonFileFinalStateIndex, Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing a set of final states for
+ *         a DFA at the offset indicated by automatonFileFinalStateIndex.
+ *     automatonFileFinalStateIndex: the index of automatonFileStr indicating
+ *         the offset at which the set of FinalStates begins.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {%d,...}
+ * at the indicated index where %d are integers with possibly more than two
+ * digits and stores the parsed data in the data structure pointed to by
+ * automatonPtr. It also advances automatonFileFinalStateIndex to the end of
+ * the set.
+ */
 void buildFinalStateArr(char *automatonFileStr,
     int *automatonFileFinalStateIndex, Automaton *automatonPtr)
 {
     int i = 0, j = 0, automatonFileStrLen = strlen(automatonFileStr),
         finalStateStrIndex = ++(*automatonFileFinalStateIndex);
-    char currStateSubStr[3] = "\0\0";
+    int stateSubStrLen = getDigitCount(STATEARR_MAXLEN);
+    char currStateSubStr[stateSubStrLen];
+    initStr(currStateSubStr, stateSubStrLen);
     while (automatonFileStr[++(*automatonFileFinalStateIndex)] != '}' &&
         *automatonFileFinalStateIndex < automatonFileStrLen)
         i++;
@@ -169,19 +274,34 @@ void buildFinalStateArr(char *automatonFileStr,
             else
             {
                 j = 0;
-                if (automatonPtr->finalStateCount < 20)
+                if (automatonPtr->finalStateCount < STATEARR_MAXLEN)
                     automatonPtr->finalStateArr[
                         (automatonPtr->finalStateCount)++] =
                         atoi(currStateSubStr);
                 else break;
-                char resetStateSubStr[3] = "\0\0";
-                memcpy(currStateSubStr, resetStateSubStr,
-                    sizeof(resetStateSubStr));
+                initStr(currStateSubStr, stateSubStrLen);
             }
         }
     }
 }
 //this function is very similar to buildTokenArr. Please refactor.
+/*
+ * Function: void buildTransitionArr(char *automatonFileStr,
+ *     int *automatonFileTransitionsIndex, Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing a set of transitions for
+ *         a DFA at the offset indicated by automatonFileTransitionsIndex.
+ *     automatonFileTransitionsIndex: the index of automatonFileStr indicating
+ *         the offset at which the set of transitions begins.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {(%d,%s,%d),...}
+ * at the indicated index where %d are integers with possibly more than two
+ * digits and %s are strings that must consist only of alphabetical characters
+ * and stores the parsed data in the data structure pointed to by automatonPtr.
+ * It also advances automatonFileTransitionsIndex to the end of the set.
+ */
 void buildTransitionArr(char *automatonFileStr,
     int *automatonFileTransitionsIndex, Automaton *automatonPtr)
 {
@@ -202,7 +322,8 @@ void buildTransitionArr(char *automatonFileStr,
     int transitionsStrLen = strlen(transitionsStr);
     for (int j = 0; j < transitionsStrLen; j++)
     {
-        if (transitionsStr[j] == ')' && automatonPtr->transitionCount < 400)
+        if (transitionsStr[j] == ')' && automatonPtr->transitionCount <
+            TRANSITIONARR_MAXLEN)
         {
             k++;
             char transitionTripleStr[k + 1];
@@ -221,11 +342,26 @@ void buildTransitionArr(char *automatonFileStr,
             k++;
     }
 }
+/*
+ * Function: void buildTransitionTriple(char *transitionTripleStr,
+ *     Automaton *automatonPtr)
+ * Parameters:
+ *     tokenPairStr: a formatted string containing a transition for a DFA.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string of the format (%d,%s,%d) where %d
+ * are integers with possibly more than two digits and %s is a string that must
+ * consist only of alphabetical characters and stores the parsed data in the
+ * data structure pointed to by automatonPtr.
+ */
 void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
 {
     int j = 0, transitionTripleStrLen = strlen(transitionTripleStr);
     bool charStored = false;
-    char currStateSubStr[3] = "\0\0";
+    int stateSubStrLen = getDigitCount(STATEARR_MAXLEN);
+    char currStateSubStr[stateSubStrLen];
+    initStr(currStateSubStr, stateSubStrLen);
     for (int i = 0; i <= transitionTripleStrLen; i++)
     {
         if (isdigit(transitionTripleStr[i]) && j < 3)
@@ -244,9 +380,7 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
                     automatonPtr->transitionArr[
                         automatonPtr->transitionCount].currentState =
                         atoi(currStateSubStr);
-                char resetStateSubStr[3] = "\0\0";
-                memcpy(currStateSubStr, resetStateSubStr,
-                    sizeof(resetStateSubStr));
+                initStr(currStateSubStr, stateSubStrLen);
             }
         }
         else if (isalpha(transitionTripleStr[i]))
@@ -259,6 +393,23 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
     }
 }
 //this function is very similar to buildTransitionArr. Please refactor.
+/*
+ * Function: void buildTokenArr(char *automatonFileStr,
+ *     int *automatonFileTokensIndex, Automaton *automatonPtr)
+ * Parameters:
+ *     automatonFileStr: a formatted string containing a set of token pairs for
+ *         a DFA at the offset indicated by automatonFileTokensIndex.
+ *     automatonFileTokensIndex: the index of automatonFileStr indicating the
+ *         offset at which the set of token pairs begins.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string with the format {(%d,%s),...}
+ * at the indicated index where %d are integers with possibly more than two
+ * digits and %s are strings that must consist only of alphabetical characters
+ * and stores the parsed data in the data structure pointed to by automatonPtr.
+ * It also advances automatonFileTokensIndex to the end of the set.
+ */
 void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
     Automaton *automatonPtr)
 {
@@ -279,12 +430,12 @@ void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
     int tokensStrLen = strlen(tokensStr);
     for (int j = 0; j < tokensStrLen; j++)
     {
-        if (tokensStr[j] == ')' && automatonPtr->tokenCount < 400)
+        if (tokensStr[j] == ')' && automatonPtr->tokenCount <
+            TRANSITIONARR_MAXLEN)
         {
             k++;
             char tokenPairStr[k + 1];
-            getSubStr(tokensStr, tokenPairStr, k,
-                tokenPairStrIndex);
+            getSubStr(tokensStr, tokenPairStr, k, tokenPairStrIndex);
             //printf("%s. ", tokenPairStr);
             buildTokenPair(tokenPairStr, automatonPtr);
             (automatonPtr->tokenCount)++;
@@ -298,16 +449,26 @@ void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
             k++;
     }
 }
+/*
+ * Function: void buildTokenPair(char *tokenPairStr, Automaton *automatonPtr)
+ * Parameters:
+ *     tokenPairStr: a formatted string containing a token pair for a DFA.
+ *     automatonPtr: a pointer to the Automaton data structure in which to store
+ *         the parsed data.
+ * Return value: none.
+ * Description: This function parses a string of the format (%d,%s) where %d is
+ * an integer with possibly more than two digits and %s is a string that must
+ * consist only of alphabetical characters and stores the parsed data in the
+ * data structure pointed to by automatonPtr.
+ */
 void buildTokenPair(char *tokenPairStr, Automaton *automatonPtr)
 {
     int j = 0, k = 0, tokenPairStrLen = strlen(tokenPairStr);
-    char currStateSubStr[3] = "\0\0";
-    //refactor these really silly null-populated empty strings (with dynamic
-    //allocation of the struct members, preferably)
-    char initTokenStr[20] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    memcpy(automatonPtr->tokenArr[automatonPtr->tokenCount].tokenStr,
-        initTokenStr, sizeof(initTokenStr));
-
+    int stateSubStrLen = getDigitCount(STATEARR_MAXLEN);
+    char currStateSubStr[stateSubStrLen];
+    initStr(currStateSubStr, stateSubStrLen);
+    initStr(automatonPtr->tokenArr[automatonPtr->tokenCount].tokenStr,
+        TOKENSTR_MAXLEN);
     for (int i = 0; i <= tokenPairStrLen; i++)
     {
         if (isdigit(tokenPairStr[i]) && j < 3)
@@ -315,14 +476,11 @@ void buildTokenPair(char *tokenPairStr, Automaton *automatonPtr)
         else if (tokenPairStr[i] == ',')
         {
             j = 0;
-            automatonPtr->tokenArr[
-                automatonPtr->tokenCount].finalState =
+            automatonPtr->tokenArr[automatonPtr->tokenCount].finalState =
                 atoi(currStateSubStr);
-            char resetStateSubStr[3] = "\0\0";
-            memcpy(currStateSubStr, resetStateSubStr,
-                sizeof(resetStateSubStr));
+            initStr(currStateSubStr, stateSubStrLen);
         }
-        else if (isalpha(tokenPairStr[i]) && k < 20)
+        else if (isalpha(tokenPairStr[i]) && k < TOKENSTR_MAXLEN)
         {
             automatonPtr->tokenArr[automatonPtr->tokenCount].tokenStr[k] =
                 tokenPairStr[i];
@@ -332,19 +490,78 @@ void buildTokenPair(char *tokenPairStr, Automaton *automatonPtr)
 }
 //This function is inefficient because it wastes memory, copying more of the
 //string than absolutely necessary. Please rewrite
+/*
+ * Function: void getSubStr(char *str, char *subStr, int count, int startIndex)
+ * Parameters:
+ *     str: the string to copy a substring from.
+ *     subStr: the string in which to store the substring.
+ *     count: the length of the substring to copy.
+ *     startIndex: the starting index in str from which to copy the substring.
+ * Return value: none.
+ * Description: This function copies a substring of a given length into another
+ * string. It is assumed that the memory allocated for subStr is greater than
+ * or equal to count * sizeof(char).
+ */
 void getSubStr(char *str, char *subStr, int count, int startIndex)
 {
     memcpy(subStr, &str[startIndex], count);
     subStr[count] = '\0';
 }
-void delSubstr(char *str, int count, int startIndex)
+/*
+ * Function: void delSubStr(char *str, int count, int startIndex)
+ * Parameters:
+ *     str: the string from which to remove the substring.
+ *     count: the number of characters to remove from the string.
+ *     startIndex: the starting index of the substring to remove.
+ * Return value: none.
+ * Description: This function removes a given number of characters from a
+ * string, starting from a given index in the string, and shortens the length
+ * to account for the removal.
+ */
+void delSubStr(char *str, int count, int startIndex)
 {
     if ((count + startIndex) <= (int)strlen(str))
         strcpy(&str[startIndex], &str[count + startIndex]);
 }
+/*
+ * Function: void initStr(char *str, int size)
+ * Parameters:
+ *     str: the string to initialize with NUL chars.
+ *     size: the length of the string.
+ * Return value: none.
+ * Description: This function fills a string with null characters, effectively
+ * creating a specialized kind of empty string.
+ */
+void initStr(char *str, int size)
+{
+    for (int i = 0; i < size; i++)
+        str[i] = '\0';
+}
+//with the right technique, it might be possible to replace this function
+//with a preprocessor macro, to optimize runtime efficiency and eliminate
+//the need for math.h.
+/*
+ * Function: int getDigitCount(int n)
+ * Parameters:
+ *     n: the base-10 integer of which to compute the number of digits.
+ * Return value: the number of digits in n.
+ * Description: This function uses log() and floor() from math.h to calculate
+ * the number of digits in an integer value, then returns that number as int.
+ */
+int getDigitCount(int n)
+{
+    return floor(log(n) / log(10)) + 1;
+}
 //This function is inefficient because it iterates through the same characters
 //repeatedly. It is also poor style because it breaks a for loop. Please rewrite
 //based on pseudocode by Connor Irvine
+/*
+ * Function: void delComments(char *str)
+ * Parameters:
+ *     str: the string from which to remove comments.
+ * Return value: none.
+ * Description: This function removes C89-style comments from strings.
+ */
 void delComments(char *str)
 {
     bool isComment = false;
@@ -359,7 +576,7 @@ void delComments(char *str)
             if(str[i] == '*' && str[i + 1] == '/')
     		{
                 j++;
-                delSubstr(str, j, commentIndex);
+                delSubStr(str, j, commentIndex);
                 delComments(str);
                 break;
             }
