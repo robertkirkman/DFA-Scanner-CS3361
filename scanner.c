@@ -19,7 +19,7 @@
 
 int main(int argc, char **argv)
 {
-    FILE *automatonFilePtr, *tokensFilePtr;
+    FILE *automatonFilePtr;//,*tokensFilePtr;
     char *automatonFileBuf = NULL;
     int automatonFileBufLen = 0;
     if (argc != 3)
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         return 1;
     }
     buildAutomaton(&automatonFileBuf[0], automatonPtr);
-    char tokensToPrint[TOKENSTOPRINT_LEN] = "";
+    //char tokensToPrint[TOKENSTOPRINT_LEN] = "";
     //printf("%s\n", automatonFileBuf);
     //scanTokens(tokensFileBuf, automatonPtr, &tokensToPrint[0]);
     //printf("%s\n", tokensToPrint);

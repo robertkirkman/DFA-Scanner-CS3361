@@ -1,5 +1,6 @@
 /* Filename: automaton.c
  * Author: Robert Kirkman
+ * Author of delComments function: Connor Irvine
  * Class: CS 3361-001
  * Professor: Dr. Yuanlin Zhang
  * Assignment: Project 1
@@ -64,7 +65,12 @@ void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr)
         printf("\n%d %c %d", automatonPtr->transitionArr[i].currentState,
                             automatonPtr->transitionArr[i].transitionChar,
                             automatonPtr->transitionArr[i].nextState);
+    for (int i = 0; i < automatonPtr->tokenCount; i++)
+        printf("\n%d %s", automatonPtr->tokenArr[i].finalState,
+                            automatonPtr->tokenArr[i].tokenStr);
 }
+//buildCharArr, buildStateArr, buildFinalStateArr, and setInitialState could
+//benefit from the use of ctype.h functions
 void buildCharArr(char *automatonFileStr, int *automatonFileCharIndex,
     Automaton *automatonPtr)
 {
@@ -92,7 +98,7 @@ void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
 {
     int i = 0, j = 0, automatonFileStrLen = strlen(automatonFileStr),
         stateStrIndex = ++(*automatonFileStateIndex);
-    char currStateSubStr[3] = {'\0', '\0', '\0'};
+    char currStateSubStr[3] = "\0\0";
     while (automatonFileStr[++(*automatonFileStateIndex)] != '}' &&
         *automatonFileStateIndex < automatonFileStrLen)
         i++;
@@ -117,7 +123,7 @@ void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
                         atoi(currStateSubStr);
                 else break;
                 //printf("%d \n", automatonPtr->stateCount);
-                char resetStateSubStr[3] = {'\0', '\0', '\0'};
+                char resetStateSubStr[3] = "\0\0";
                 memcpy(currStateSubStr, resetStateSubStr,
                     sizeof(resetStateSubStr));
             }
@@ -145,7 +151,7 @@ void buildFinalStateArr(char *automatonFileStr,
 {
     int i = 0, j = 0, automatonFileStrLen = strlen(automatonFileStr),
         finalStateStrIndex = ++(*automatonFileFinalStateIndex);
-    char currStateSubStr[3] = {'\0', '\0', '\0'};
+    char currStateSubStr[3] = "\0\0";
     while (automatonFileStr[++(*automatonFileFinalStateIndex)] != '}' &&
         *automatonFileFinalStateIndex < automatonFileStrLen)
         i++;
@@ -168,13 +174,14 @@ void buildFinalStateArr(char *automatonFileStr,
                         (automatonPtr->finalStateCount)++] =
                         atoi(currStateSubStr);
                 else break;
-                char resetStateSubStr[3] = {'\0', '\0', '\0'};
+                char resetStateSubStr[3] = "\0\0";
                 memcpy(currStateSubStr, resetStateSubStr,
                     sizeof(resetStateSubStr));
             }
         }
     }
 }
+//this function is very similar to buildTokenArr. Please refactor.
 void buildTransitionArr(char *automatonFileStr,
     int *automatonFileTransitionsIndex, Automaton *automatonPtr)
 {
@@ -191,7 +198,7 @@ void buildTransitionArr(char *automatonFileStr,
     i++;
     char transitionsStr[i + 1];
     getSubStr(automatonFileStr, transitionsStr, i, transitionsStrIndex);
-    printf("%s. ", transitionsStr);
+    //printf("%s. ", transitionsStr);
     int transitionsStrLen = strlen(transitionsStr);
     for (int j = 0; j < transitionsStrLen; j++)
     {
@@ -201,7 +208,7 @@ void buildTransitionArr(char *automatonFileStr,
             char transitionTripleStr[k + 1];
             getSubStr(transitionsStr, transitionTripleStr, k,
                 transitionTripleStrIndex);
-            printf("%s. ", transitionTripleStr);
+            //printf("%s. ", transitionTripleStr);
             buildTransitionTriple(transitionTripleStr, automatonPtr);
             (automatonPtr->transitionCount)++;
         }
@@ -218,7 +225,7 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
 {
     int j = 0, transitionTripleStrLen = strlen(transitionTripleStr);
     bool charStored = false;
-    char currStateSubStr[3] = {'\0', '\0', '\0'};
+    char currStateSubStr[3] = "\0\0";
     for (int i = 0; i <= transitionTripleStrLen; i++)
     {
         if (isdigit(transitionTripleStr[i]) && j < 3)
@@ -237,7 +244,7 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
                     automatonPtr->transitionArr[
                         automatonPtr->transitionCount].currentState =
                         atoi(currStateSubStr);
-                char resetStateSubStr[3] = {'\0', '\0', '\0'};
+                char resetStateSubStr[3] = "\0\0";
                 memcpy(currStateSubStr, resetStateSubStr,
                     sizeof(resetStateSubStr));
             }
@@ -251,15 +258,77 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
         }
     }
 }
+//this function is very similar to buildTransitionArr. Please refactor.
 void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
     Automaton *automatonPtr)
 {
+    int i = 0, k = 0, tokensStrIndex = 0, automatonFileStrLen =
+        strlen(automatonFileStr), tokenPairStrIndex = 0;
     automatonPtr->tokenCount = 0;
-
+    while (automatonFileStr[++(*automatonFileTokensIndex)] != '(' &&
+        *automatonFileTokensIndex < automatonFileStrLen) {}
+    tokensStrIndex = *automatonFileTokensIndex;
+    while (automatonFileStr[++(*automatonFileTokensIndex)] != '}' &&
+        *automatonFileTokensIndex < automatonFileStrLen)
+        i++;
+    (*automatonFileTokensIndex)++;
+    i++;
+    char tokensStr[i + 1];
+    getSubStr(automatonFileStr, tokensStr, i, tokensStrIndex);
+    //printf("%s. ", tokensStr);
+    int tokensStrLen = strlen(tokensStr);
+    for (int j = 0; j < tokensStrLen; j++)
+    {
+        if (tokensStr[j] == ')' && automatonPtr->tokenCount < 400)
+        {
+            k++;
+            char tokenPairStr[k + 1];
+            getSubStr(tokensStr, tokenPairStr, k,
+                tokenPairStrIndex);
+            //printf("%s. ", tokenPairStr);
+            buildTokenPair(tokenPairStr, automatonPtr);
+            (automatonPtr->tokenCount)++;
+        }
+        else if (tokensStr[j] == '(')
+        {
+            tokenPairStrIndex = j;
+            k = 1;
+        }
+        else
+            k++;
+    }
 }
 void buildTokenPair(char *tokenPairStr, Automaton *automatonPtr)
 {
+    int j = 0, k = 0, tokenPairStrLen = strlen(tokenPairStr);
+    char currStateSubStr[3] = "\0\0";
+    //refactor these really silly null-populated empty strings (with dynamic
+    //allocation of the struct members, preferably)
+    char initTokenStr[20] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    memcpy(automatonPtr->tokenArr[automatonPtr->tokenCount].tokenStr,
+        initTokenStr, sizeof(initTokenStr));
 
+    for (int i = 0; i <= tokenPairStrLen; i++)
+    {
+        if (isdigit(tokenPairStr[i]) && j < 3)
+            currStateSubStr[j++] = tokenPairStr[i];
+        else if (tokenPairStr[i] == ',')
+        {
+            j = 0;
+            automatonPtr->tokenArr[
+                automatonPtr->tokenCount].finalState =
+                atoi(currStateSubStr);
+            char resetStateSubStr[3] = "\0\0";
+            memcpy(currStateSubStr, resetStateSubStr,
+                sizeof(resetStateSubStr));
+        }
+        else if (isalpha(tokenPairStr[i]) && k < 20)
+        {
+            automatonPtr->tokenArr[automatonPtr->tokenCount].tokenStr[k] =
+                tokenPairStr[i];
+            k++;
+        }
+    }
 }
 //This function is inefficient because it wastes memory, copying more of the
 //string than absolutely necessary. Please rewrite
@@ -270,11 +339,12 @@ void getSubStr(char *str, char *subStr, int count, int startIndex)
 }
 void delSubstr(char *str, int count, int startIndex)
 {
-    if ((count + startIndex) <= strlen(str))
+    if ((count + startIndex) <= (int)strlen(str))
         strcpy(&str[startIndex], &str[count + startIndex]);
 }
 //This function is inefficient because it iterates through the same characters
 //repeatedly. It is also poor style because it breaks a for loop. Please rewrite
+//based on pseudocode by Connor Irvine
 void delComments(char *str)
 {
     bool isComment = false;
