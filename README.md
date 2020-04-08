@@ -8,4 +8,4 @@
 ## Executing:
 
 ##### **UNIX-like:**
-./scanner test1.txt test2.txt
+`./scanner test1.txt test2.txt`
