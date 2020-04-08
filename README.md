@@ -3,7 +3,7 @@
 ## Compliling:
 
 ##### **gcc:**
-`gcc -o scanner scanner.c automaton.c`
+`gcc -o scanner scanner.c automaton.c -lm`
 
 ## Executing:
 
