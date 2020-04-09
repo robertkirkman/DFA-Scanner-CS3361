@@ -3,25 +3,36 @@
  * Class: CS 3361-001
  * Professor: Dr. Yuanlin Zhang
  * Assignment: Project 1
- * Description: This header file contains the declarations for structs and
- * functions necessary for parsing a formatted text file and constructing and
- * storing a deterministic finite automaton from it.
+ * Description: This header file contains the definitons for structs and the
+ * function prototypes necessary for parsing a formatted string and
+ * constructing and storing a deterministic finite automaton from it.
  */
 //preprocessor directives and constants
 #ifndef AUTOMATON_H
 #define AUTOMATON_H
-#define TOKENSTOPRINT_LEN 100
 #define TOKENSTR_MAXLEN 20
-#define CHARARR_MAXLEN 20
-#define STATEARR_MAXLEN 20
-#define TRANSITIONARR_MAXLEN (CHARARR_MAXLEN*STATEARR_MAXLEN)
-//struct declarations and typedefs
-struct transitionTripleStruct;
-typedef struct transitionTripleStruct transitionTriple;
-struct tokenPairStruct;
-typedef struct tokenPairStruct tokenPair;
-struct AutomatonStruct;
-typedef struct AutomatonStruct Automaton;
+#define CHARARR_MAXLEN 100
+#define STATEARR_MAXLEN 100
+#define TRANSITIONARR_MAXLEN (CHARARR_MAXLEN * STATEARR_MAXLEN)
+//struct definitons and typedefs for Automaton data type
+typedef struct transitionTripleStruct
+{
+    int currentState, nextState;
+    char transitionChar;
+} transitionTriple;
+typedef struct tokenPairStruct
+{
+    int finalState;
+    char tokenStr[TOKENSTR_MAXLEN];
+} tokenPair;
+typedef struct AutomatonStruct
+{
+    char charArr[CHARARR_MAXLEN];
+    int stateArr[STATEARR_MAXLEN], finalStateArr[STATEARR_MAXLEN], charCount,
+        stateCount, finalStateCount, initialState, transitionCount, tokenCount;
+    transitionTriple transitionArr[TRANSITIONARR_MAXLEN];
+    tokenPair tokenArr[STATEARR_MAXLEN];
+} Automaton;
 //function prototypes
 /*
  * Function: Automaton *newAutomaton(void)

@@ -14,9 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "automaton.h"
-//#include "scan.h"
+#include "scan.h"
 
-int initFileBuf(FILE *filePtr, char **fileBufPtr, char *filename);
+int initFileBuf(char **fileBufPtr, char *filename);
 
 int main(int argc, char **argv)
 {
@@ -25,13 +25,12 @@ int main(int argc, char **argv)
         printf("error: invalid number of arguments.\n");
         return 2;
     }
-    FILE *automatonFilePtr = NULL, *tokensFilePtr = NULL;
     char *automatonFileBuf = NULL, *tokensFileBuf = NULL;
-    int automatonFileErr = initFileBuf(automatonFilePtr, &automatonFileBuf,
+    int automatonFileErr = initFileBuf(&automatonFileBuf,
         argv[1]);
     if (automatonFileErr)
         return automatonFileErr;
-    int tokensFileErr = initFileBuf(tokensFilePtr, &tokensFileBuf,
+    int tokensFileErr = initFileBuf(&tokensFileBuf,
         argv[2]);
     if (tokensFileErr)
         return tokensFileErr;
@@ -43,24 +42,34 @@ int main(int argc, char **argv)
     }
     buildAutomaton(automatonFileBuf, automatonPtr);
     free(automatonFileBuf);
+    char tokensToPrint[TOKENSTOPRINT_LEN];
+    initStr(tokensToPrint, TOKENSTOPRINT_LEN);
+    scanTokens(tokensFileBuf, automatonPtr, tokensToPrint);
     free(tokensFileBuf);
-    //char tokensToPrint[TOKENSTOPRINT_LEN] = "";
-    //printf("%s\n", automatonFileBuf);
-    //scanTokens(tokensFileBuf, automatonPtr, &tokensToPrint[0]);
-    //printf("%s\n", tokensToPrint);
-
+    printf("%s\n", tokensToPrint);
     deleteAutomaton(automatonPtr);
     return 0;
 }
 //this function induces UB included as a cheap hack for cross-platform file I/O.
 //Rewrite.
-int initFileBuf(FILE *filePtr, char **fileBufPtr, char *filename)
+/*
+ * Function: int initFileBuf(FILE *filePtr, char **fileBufPtr, char *filename)
+ * Parameters:
+ *     fileBufPtr: a pointer to the string into which to read the file contents.
+ *     filename: the name of the file passed from the OS to read.
+ * Return value: integer returning a non-zero value if error, or zero if no
+ *     error.
+ * Description: function to use FILE pointer manipulation functions to read the
+ * entire file located at the filename given into a buffer string.
+ */
+int initFileBuf(char **fileBufPtr, char *filename)
 {
+    FILE *filePtr = NULL;
     int fileBufLen = 0;
     filePtr = fopen(filename, "rb");
     if (filePtr == NULL)
     {
-        printf("error: invalid filename in first argument.\n");
+        printf("error: invalid filename.\n");
         return 3;
     }
     //this line is UNDEFINED BEHAVIOR for BINARY STREAMS in the C Standard Spec

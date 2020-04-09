@@ -4,8 +4,8 @@
  * Class: CS 3361-001
  * Professor: Dr. Yuanlin Zhang
  * Assignment: Project 1
- * Description: This C file contains the definitions for structs and functions
- * necessary for parsing a formatted text file and constructing and storing a
+ * Description: This C file contains the definitions for functions
+ * necessary for parsing a formatted string and constructing and storing a
  * deterministic finite automaton from it.
  */
 #include <stdio.h>
@@ -15,25 +15,6 @@
 #include <ctype.h>
 #include <math.h>
 #include "automaton.h"
-//struct definitions for Automaton data type
-struct transitionTripleStruct
-{
-    int currentState, nextState;
-    char transitionChar;
-};
-struct tokenPairStruct
-{
-    int finalState;
-    char tokenStr[TOKENSTR_MAXLEN];
-};
-struct AutomatonStruct
-{
-    char charArr[CHARARR_MAXLEN];
-    int stateArr[STATEARR_MAXLEN], finalStateArr[STATEARR_MAXLEN], charCount,
-        stateCount, finalStateCount, initialState, transitionCount, tokenCount;
-    transitionTriple transitionArr[TRANSITIONARR_MAXLEN];
-    tokenPair tokenArr[STATEARR_MAXLEN];
-};
 //Function definitons for parsing the buffer of the automaton file into the
 //Automaton data structure
 /*
@@ -76,7 +57,8 @@ void deleteAutomaton(Automaton *automatonPtr)
  */
 void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr)
 {
-    //shared index incremented by all the functions to step through the buffer
+    //shared index incremented by all the parsing functions to step through the
+    //buffer
     int automatonFileIndex = 0;
     //completely remove comments from the buffer before doing anything else
     //to ensure comments to not interfere with the parsing
@@ -90,24 +72,14 @@ void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr)
     buildFinalStateArr(automatonFileStr, &automatonFileIndex, automatonPtr);
     buildTransitionArr(automatonFileStr, &automatonFileIndex, automatonPtr);
     buildTokenArr(automatonFileStr, &automatonFileIndex, automatonPtr);
-    /*for (int i = 0; i < automatonPtr->charCount; i++)
-        printf("%c ", (automatonPtr->charArr)[i]);
-    //printf("\n%d %d\n", automatonPtr->charCount, automatonPtr->stateCount);
-    for (int i = 0; i < automatonPtr->stateCount; i++)
-        printf("%d ", (automatonPtr->stateArr)[i]);
-    printf(". %d . ", automatonPtr->initialState);
-    for (int i = 0; i < automatonPtr->finalStateCount; i++)
-        printf("%d ", (automatonPtr->finalStateArr)[i]);*/
-    for (int i = 0; i < automatonPtr->transitionCount; i++)
-        printf("\n%d %c %d", automatonPtr->transitionArr[i].currentState,
-                            automatonPtr->transitionArr[i].transitionChar,
-                            automatonPtr->transitionArr[i].nextState);
-    for (int i = 0; i < automatonPtr->tokenCount; i++)
-        printf("\n%d %s", automatonPtr->tokenArr[i].finalState,
-                            automatonPtr->tokenArr[i].tokenStr);
 }
-//buildCharArr(), buildStateArr(), buildFinalStateArr(), and setInitialState()
-//could benefit from the use of ctype.h functions
+/* !!!!!
+ * FIXME: IMPORTANT: buildTokenPair() and buildTransitionTriple() ONLY support
+ * alphabetical characters. The specification states that transition characters
+ * may be "all characters that a programmer can use EXCEPT the THREE characters
+ * '{’, ’}’ and ’,’." Please rewrite to support this.
+ * !!!!!
+ */
 /*
  * Function: void buildCharArr(char *automatonFileStr,
  *     int *automatonFileCharIndex, Automaton *automatonPtr)
@@ -177,7 +149,6 @@ void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
     i = i + 2;
     char stateStr[i + 1];
     getSubStr(automatonFileStr, stateStr, i, stateStrIndex);
-    //printf("%d: %s\n", i, stateStr);
     automatonPtr->stateCount = 0;
     //place within separate function? (see buildFinalStateArr())
     for (int k = 0; k <= i; k++)
@@ -193,7 +164,6 @@ void buildStateArr(char *automatonFileStr, int *automatonFileStateIndex,
                     automatonPtr->stateArr[(automatonPtr->stateCount)++] =
                         atoi(currStateSubStr);
                 else break;
-                //printf("%d \n", automatonPtr->stateCount);
                 initStr(currStateSubStr, stateSubStrLen);
             }
         }
@@ -318,7 +288,6 @@ void buildTransitionArr(char *automatonFileStr,
     i++;
     char transitionsStr[i + 1];
     getSubStr(automatonFileStr, transitionsStr, i, transitionsStrIndex);
-    //printf("%s. ", transitionsStr);
     int transitionsStrLen = strlen(transitionsStr);
     for (int j = 0; j < transitionsStrLen; j++)
     {
@@ -329,7 +298,6 @@ void buildTransitionArr(char *automatonFileStr,
             char transitionTripleStr[k + 1];
             getSubStr(transitionsStr, transitionTripleStr, k,
                 transitionTripleStrIndex);
-            //printf("%s. ", transitionTripleStr);
             buildTransitionTriple(transitionTripleStr, automatonPtr);
             (automatonPtr->transitionCount)++;
         }
@@ -426,7 +394,6 @@ void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
     i++;
     char tokensStr[i + 1];
     getSubStr(automatonFileStr, tokensStr, i, tokensStrIndex);
-    //printf("%s. ", tokensStr);
     int tokensStrLen = strlen(tokensStr);
     for (int j = 0; j < tokensStrLen; j++)
     {
@@ -436,7 +403,6 @@ void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
             k++;
             char tokenPairStr[k + 1];
             getSubStr(tokensStr, tokenPairStr, k, tokenPairStrIndex);
-            //printf("%s. ", tokenPairStr);
             buildTokenPair(tokenPairStr, automatonPtr);
             (automatonPtr->tokenCount)++;
         }
