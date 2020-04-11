@@ -1,5 +1,5 @@
 # DFA-Scanner-CS3361
-This program is only compatible with POSIX-compliant operating systems, such as the UNIX-like Linux, MacOS and BSD
+This program is only compatible with POSIX-compliant operating systems, such as the UNIX-like Linux, MacOS and BSD. If such a system is unavailable, the online IDE [repl.it](https://repl.it/languages/c) includes support for compiling command-line applications like this one using the gcc compiler on Linux.
 
 ## Compliling:
 
@@ -9,4 +9,4 @@ This program is only compatible with POSIX-compliant operating systems, such as 
 ## Executing:
 
 ##### **UNIX-like:**
-`./scanner test1.txt test2.txt`
+`./scanner automaton.txt tokens.txt`
