@@ -11,5 +11,8 @@ This program is only compatible with POSIX-compliant operating systems, such as 
 
 ## Executing:
 
-##### **UNIX-like:**
+##### **With included examples:**
 `./scanner automaton.txt tokens.txt`
+
+##### **With custom files:**
+`./scanner [automaton file] [tokens file]`
