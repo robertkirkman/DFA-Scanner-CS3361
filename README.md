@@ -1,4 +1,5 @@
 # DFA-Scanner-CS3361
+This program is only compatible with POSIX-compliant operating systems, such as the UNIX-like Linux, MacOS and BSD
 
 ## Compliling:
 
