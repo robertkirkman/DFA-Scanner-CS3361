@@ -11,6 +11,10 @@
  * formatted list, but if any token is invalid, this program prints only
  * "error.".
  */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "automaton.h"
@@ -26,12 +30,10 @@ int main(int argc, char **argv)
         return 2;
     }
     char *automatonFileBuf = NULL, *tokensFileBuf = NULL;
-    int automatonFileErr = initFileBuf(&automatonFileBuf,
-        argv[1]);
+    int automatonFileErr = initFileBuf(&automatonFileBuf, argv[1]);
     if (automatonFileErr)
         return automatonFileErr;
-    int tokensFileErr = initFileBuf(&tokensFileBuf,
-        argv[2]);
+    int tokensFileErr = initFileBuf(&tokensFileBuf, argv[2]);
     if (tokensFileErr)
         return tokensFileErr;
     Automaton *automatonPtr = newAutomaton();
@@ -50,8 +52,7 @@ int main(int argc, char **argv)
     deleteAutomaton(automatonPtr);
     return 0;
 }
-//this function induces UB included as a cheap hack for cross-platform file I/O.
-//Rewrite.
+//this file I/O uses POSIX-exclusive functions and data types
 /*
  * Function: int initFileBuf(FILE *filePtr, char **fileBufPtr, char *filename)
  * Parameters:
@@ -66,25 +67,30 @@ int initFileBuf(char **fileBufPtr, char *filename)
 {
     FILE *filePtr = NULL;
     int fileBufLen = 0;
-    filePtr = fopen(filename, "rb");
+    struct stat fileStat;
+    int fileDesc = open(filename, O_RDONLY);
+    if (fileDesc == -1)
+    {
+        printf("error: invalid filename.\n");
+        return 3;
+    }
+    filePtr = fdopen(fileDesc, "r");
     if (filePtr == NULL)
     {
         printf("error: invalid filename.\n");
         return 3;
     }
-    //this line is UNDEFINED BEHAVIOR for BINARY STREAMS in the C Standard Spec
-    if (fseek(filePtr, 0, SEEK_END))
+    if ((fstat(fileDesc, &fileStat) != 0) || (!S_ISREG(fileStat.st_mode)))
     {
-        printf("error: file read error.\n");
+        printf("error: file needs to be a normal file.\n");
         return 4;
     }
-    fileBufLen = ftell(filePtr);
+    fileBufLen = fileStat.st_size;
     if (fileBufLen == -1)
     {
         printf("error: file read error.\n");
-        return 4;
+        return 5;
     }
-    rewind(filePtr);
     *fileBufPtr = malloc(fileBufLen + 1);
     if (*fileBufPtr == NULL)
     {
@@ -96,9 +102,9 @@ int initFileBuf(char **fileBufPtr, char *filename)
     {
         printf("error: file read error.\n");
         free(*fileBufPtr);
-        return 4;
+        return 5;
     }
-    fclose(filePtr);
+    close(fileDesc);
     (*fileBufPtr)[fileBufLen] = '\0';
     return 0;
 }
