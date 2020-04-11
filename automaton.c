@@ -318,15 +318,15 @@ void buildTransitionArr(char *automatonFileStr,
  *     automatonPtr: a pointer to the Automaton data structure in which to store
  *         the parsed data.
  * Return value: none.
- * Description: This function parses a string of the format (%d,%s,%d) where %d
- * are integers with possibly more than two digits and %s is a string that must
- * consist only of alphabetical characters and stores the parsed data in the
+ * Description: This function parses a string of the format (%d,%c,%d) where %d
+ * are integers with possibly more than two digits and %c is a transition
+ * character and stores the parsed data in the
  * data structure pointed to by automatonPtr.
  */
 void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
 {
     int j = 0, transitionTripleStrLen = strlen(transitionTripleStr);
-    bool charStored = false;
+    bool currentStateStored = false;
     int stateSubStrLen = getDigitCount(STATEARR_MAXLEN);
     char currStateSubStr[stateSubStrLen];
     initStr(currStateSubStr, stateSubStrLen);
@@ -334,30 +334,28 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
     {
         if (isdigit(transitionTripleStr[i]) && j < 3)
             currStateSubStr[j++] = transitionTripleStr[i];
-        else if ((transitionTripleStr[i] == ',' ||
-            transitionTripleStr[i] == ')') && i > 0)
+        else if (transitionTripleStr[i] == ',' && i > 0)
         {
-            if(!isalpha(transitionTripleStr[i - 1]))
+            j = 0;
+            if (currentStateStored)
             {
-                j = 0;
-                if (charStored)
-                    automatonPtr->transitionArr[
-                        automatonPtr->transitionCount].nextState =
-                        atoi(currStateSubStr);
-                else
-                    automatonPtr->transitionArr[
-                        automatonPtr->transitionCount].currentState =
-                        atoi(currStateSubStr);
-                initStr(currStateSubStr, stateSubStrLen);
+                automatonPtr->transitionArr[
+                    automatonPtr->transitionCount].transitionChar =
+                    transitionTripleStr[i - 1];
             }
+            else
+            {
+                automatonPtr->transitionArr[
+                    automatonPtr->transitionCount].currentState =
+                    atoi(currStateSubStr);
+                currentStateStored = true;
+            }
+            initStr(currStateSubStr, stateSubStrLen);
         }
-        else if (isalpha(transitionTripleStr[i]))
-        {
+        else if (transitionTripleStr[i] == ')')
             automatonPtr->transitionArr[
-                automatonPtr->transitionCount].transitionChar =
-                transitionTripleStr[i];
-            charStored = true;
-        }
+                automatonPtr->transitionCount].nextState =
+                atoi(currStateSubStr);
     }
 }
 //this function is very similar to buildTransitionArr. Please refactor.
