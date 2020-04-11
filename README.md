@@ -6,6 +6,9 @@ This program is only compatible with POSIX-compliant operating systems, such as 
 ##### **gcc:**
 `gcc -o scanner scanner.c automaton.c scan.c -lm`
 
+##### **gcc + make:**
+`make`
+
 ## Executing:
 
 ##### **UNIX-like:**
