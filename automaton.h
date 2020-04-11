@@ -230,7 +230,7 @@ void getSubStr(char *str, char *subStr, int count, int startIndex);
  * string, starting from a given index in the string, and shortens the length
  * to account for the removal.
  */
-void delSubstr(char *str, int count, int startIndex);
+void delSubStr(char *str, int count, int startIndex);
 /*
  * Function: void initStr(char *str, int size)
  * Parameters:
