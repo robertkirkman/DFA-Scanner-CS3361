@@ -304,6 +304,12 @@ void buildTransitionArr(char *automatonFileStr,
     }
 }
 /*
+ * FIXME: buildTransitonArr() and buildTransitionTriple() functions do not
+ * support parentheses as transition characters. This is against the
+ * specification, whichstates that transition characters may be any character
+ * except for '{', '}', and ','. Please rewrite.
+ */
+/*
  * Function: void buildTransitionTriple(char *transitionTripleStr,
  *     Automaton *automatonPtr)
  * Parameters:
