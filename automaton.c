@@ -73,13 +73,6 @@ void buildAutomaton(char *automatonFileStr, Automaton *automatonPtr)
     buildTransitionArr(automatonFileStr, &automatonFileIndex, automatonPtr);
     buildTokenArr(automatonFileStr, &automatonFileIndex, automatonPtr);
 }
-/* !!!!!
- * FIXME: IMPORTANT: buildTokenPair() and buildTransitionTriple() ONLY support
- * alphabetical characters. The specification states that transition characters
- * may be "all characters that a programmer can use EXCEPT the THREE characters
- * '{’, ’}’ and ’,’." Please rewrite to support this.
- * !!!!!
- */
 /*
  * Function: void buildCharArr(char *automatonFileStr,
  *     int *automatonFileCharIndex, Automaton *automatonPtr)
