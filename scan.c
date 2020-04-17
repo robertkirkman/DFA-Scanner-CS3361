@@ -58,6 +58,14 @@ void scanTokens(char *tokensFileStr, Automaton *automatonPtr, char
 //of the parameters together into a data structure, and pass a pointer to an
 //instance of one instead of a bunch of separate pointers.
 /*
+ * FIXME: scan() provides information about the tokens by populating the array
+ * tokenFinalStatesArr. According to the specifcation, the output of
+ * scan must be one token instead of a sequence of tokens. Please refactor,
+ * for example, into two functions, one which satisfies the requirements of the
+ * specification for the function scan(), and one perhaps named scanDriver() to
+ * manipulate that function into the existing structure of this application.
+ */
+/*
  * Function: void scan(char *tokensFileStr, int tokensFileStrLen,
  *     Automaton *automatonPtr, int *tokensFileIndex, int *currStatePtr,
  *     int *tokenFinalStatesArr, int *tokenFinalStatesArrIndex,
