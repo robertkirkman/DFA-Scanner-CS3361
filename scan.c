@@ -233,7 +233,7 @@ void recognizeTokens(Automaton *automatonPtr, int *tokenFinalStatesArr,
             }
         }
         if (tokensToPrintIndex < TOKENSTOPRINT_LEN)
-            strcpy(&tokensToPrint[tokensToPrintIndex - 2], ")");
+            strcpy(&tokensToPrint[tokensToPrintIndex - 2], ").");
     }
     else
         strcpy(tokensToPrint, "error.");
