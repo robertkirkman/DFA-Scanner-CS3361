@@ -259,11 +259,12 @@ void buildFinalStateArr(char *automatonFileStr,
  *     automatonPtr: a pointer to the Automaton data structure in which to store
  *         the parsed data.
  * Return value: none.
- * Description: This function parses a string with the format {(%d,%s,%d),...}
+ * Description: This function parses a string with the format {(%d,%c,%d),...}
  * at the indicated index where %d are integers with possibly more than two
- * digits and %s are strings that must consist only of alphabetical characters
- * and stores the parsed data in the data structure pointed to by automatonPtr.
- * It also advances automatonFileTransitionsIndex to the end of the set.
+ * digits and %c are characters of any value with the exceptions of '{', '}'
+ * and ',' and stores the parsed data in the data structure pointed to by
+ * automatonPtr. It also advances automatonFileTransitionsIndex to the end of
+ * the set.
  */
 void buildTransitionArr(char *automatonFileStr,
     int *automatonFileTransitionsIndex, Automaton *automatonPtr)
@@ -271,11 +272,11 @@ void buildTransitionArr(char *automatonFileStr,
     int i = 0, k = 0, transitionsStrIndex = 0, automatonFileStrLen =
         strlen(automatonFileStr), transitionTripleStrIndex = 0;
     automatonPtr->transitionCount = 0;
-    while (automatonFileStr[++(*automatonFileTransitionsIndex)] != '(' &&
-        *automatonFileTransitionsIndex < automatonFileStrLen) {}
+    while (++(*automatonFileTransitionsIndex) < automatonFileStrLen &&
+        automatonFileStr[*automatonFileTransitionsIndex] != '(') {}
     transitionsStrIndex = *automatonFileTransitionsIndex;
-    while (automatonFileStr[++(*automatonFileTransitionsIndex)] != '}' &&
-        *automatonFileTransitionsIndex < automatonFileStrLen)
+    while (++(*automatonFileTransitionsIndex) < automatonFileStrLen &&
+        automatonFileStr[*automatonFileTransitionsIndex] != '}')
         i++;
     (*automatonFileTransitionsIndex)++;
     i++;
@@ -381,11 +382,11 @@ void buildTokenArr(char *automatonFileStr, int *automatonFileTokensIndex,
     int i = 0, k = 0, tokensStrIndex = 0, automatonFileStrLen =
         strlen(automatonFileStr), tokenPairStrIndex = 0;
     automatonPtr->tokenCount = 0;
-    while (automatonFileStr[++(*automatonFileTokensIndex)] != '(' &&
-        *automatonFileTokensIndex < automatonFileStrLen) {}
+    while (++(*automatonFileTokensIndex) < automatonFileStrLen &&
+        automatonFileStr[*automatonFileTokensIndex] != '(') {}
     tokensStrIndex = *automatonFileTokensIndex;
-    while (automatonFileStr[++(*automatonFileTokensIndex)] != '}' &&
-        *automatonFileTokensIndex < automatonFileStrLen)
+    while (++(*automatonFileTokensIndex) < automatonFileStrLen &&
+        automatonFileStr[*automatonFileTokensIndex] != '}')
         i++;
     (*automatonFileTokensIndex)++;
     i++;
