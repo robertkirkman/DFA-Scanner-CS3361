@@ -269,7 +269,7 @@ void buildFinalStateArr(char *automatonFileStr,
 void buildTransitionArr(char *automatonFileStr,
     int *automatonFileTransitionsIndex, Automaton *automatonPtr)
 {
-    int i = 0, k = 0, transitionsStrIndex = 0, automatonFileStrLen =
+    int i = 0, k = 0, c=0, transitionsStrIndex = 0, automatonFileStrLen =
         strlen(automatonFileStr), transitionTripleStrIndex = 0;
     automatonPtr->transitionCount = 0;
     while (++(*automatonFileTransitionsIndex) < automatonFileStrLen &&
@@ -286,7 +286,7 @@ void buildTransitionArr(char *automatonFileStr,
     for (int j = 0; j < transitionsStrLen; j++)
     {
         if (transitionsStr[j] == ')' && automatonPtr->transitionCount <
-            TRANSITIONARR_MAXLEN)
+            TRANSITIONARR_MAXLEN && c==2)
         {
             k++;
             char transitionTripleStr[k + 1];
@@ -294,11 +294,18 @@ void buildTransitionArr(char *automatonFileStr,
                 transitionTripleStrIndex);
             buildTransitionTriple(transitionTripleStr, automatonPtr);
             (automatonPtr->transitionCount)++;
+            c++;
         }
-        else if (transitionsStr[j] == '(')
+        else if (transitionsStr[j] == '(' && c==3)
         {
             transitionTripleStrIndex = j;
             k = 1;
+            c = 0;
+        }
+        else if (transitionsStr[j]==',' && c<2)
+        {
+          c++;
+          k++;
         }
         else
             k++;
@@ -330,7 +337,7 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
     int stateSubStrLen = getDigitCount(STATEARR_MAXLEN);
     char currStateSubStr[stateSubStrLen];
     initStr(currStateSubStr, stateSubStrLen);
-    for (int i = 0; i <= transitionTripleStrLen; i++)
+    for (int i = 0; i < transitionTripleStrLen; i++)
     {
         if (isdigit(transitionTripleStr[i]) && j < 3)
             currStateSubStr[j++] = transitionTripleStr[i];
@@ -349,10 +356,10 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
                     automatonPtr->transitionCount].currentState =
                     atoi(currStateSubStr);
                 currentStateStored = true;
+                initStr(currStateSubStr, stateSubStrLen);
             }
-            initStr(currStateSubStr, stateSubStrLen);
         }
-        else if (transitionTripleStr[i] == ')')
+        else if (i == transitionTripleStrLen-1)
             automatonPtr->transitionArr[
                 automatonPtr->transitionCount].nextState =
                 atoi(currStateSubStr);
