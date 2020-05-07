@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "automaton.h"
 #include "scan.h"
 /*
@@ -175,8 +176,16 @@ int getNextState(Automaton *automatonPtr, int currState, char transChar)
 {
     for (int i = 0; i < automatonPtr->transitionCount; i++)
     {
+        //return the next state if the character matches or the requirements
+        //of one of the special wildcard transition characters are fulfilled
         if (currState == automatonPtr->transitionArr[i].currentState &&
-            transChar == automatonPtr->transitionArr[i].transitionChar)
+            (transChar == automatonPtr->transitionArr[i].transitionChar ||
+            (automatonPtr->transitionArr[i].transitionChar == '~' &&
+            isdigit(transChar)) ||
+            (automatonPtr->transitionArr[i].transitionChar == '`' &&
+            isalpha(transChar)) ||
+            (automatonPtr->transitionArr[i].transitionChar == '&' &&
+            isalnum(transChar))))
             return automatonPtr->transitionArr[i].nextState;
     }
     for (int i = 0; i < automatonPtr->finalStateCount; i++)
