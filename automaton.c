@@ -1,6 +1,5 @@
 /* Filename: automaton.c
- * Author: Robert Kirkman
- * Author of delComments() function: Connor Irvine
+ * Author: Robert Kirkman & Connor Irvine
  * Class: CS 3361-001
  * Professor: Dr. Yuanlin Zhang
  * Assignment: Project 1
@@ -286,37 +285,31 @@ void buildTransitionArr(char *automatonFileStr,
     for (int j = 0; j < transitionsStrLen; j++)
     {
         if (transitionsStr[j] == ')' && automatonPtr->transitionCount <
-            TRANSITIONARR_MAXLEN && c==2)
+            TRANSITIONARR_MAXLEN && c == 2)
         {
+            c++;
             k++;
             char transitionTripleStr[k + 1];
             getSubStr(transitionsStr, transitionTripleStr, k,
                 transitionTripleStrIndex);
             buildTransitionTriple(transitionTripleStr, automatonPtr);
             (automatonPtr->transitionCount)++;
-            c++;
         }
-        else if (transitionsStr[j] == '(' && c==3)
+        else if (transitionsStr[j] == '(' && c == 3)
         {
             transitionTripleStrIndex = j;
-            k = 1;
             c = 0;
+            k = 1;
         }
-        else if (transitionsStr[j]==',' && c<2)
+        else if (transitionsStr[j]==',' && c < 2)
         {
-          c++;
-          k++;
+            c++;
+            k++;
         }
         else
             k++;
     }
 }
-/*
- * FIXME: buildTransitonArr() and buildTransitionTriple() functions do not
- * support parentheses as transition characters. This is against the
- * specification, whichstates that transition characters may be any character
- * except for '{', '}', and ','. Please rewrite.
- */
 /*
  * Function: void buildTransitionTriple(char *transitionTripleStr,
  *     Automaton *automatonPtr)
@@ -359,7 +352,7 @@ void buildTransitionTriple(char *transitionTripleStr,  Automaton *automatonPtr)
                 initStr(currStateSubStr, stateSubStrLen);
             }
         }
-        else if (i == transitionTripleStrLen-1)
+        else if (i == transitionTripleStrLen - 1)
             automatonPtr->transitionArr[
                 automatonPtr->transitionCount].nextState =
                 atoi(currStateSubStr);
