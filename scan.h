@@ -14,7 +14,8 @@
 #include <stdbool.h>
 #include "automaton.h"
 #define MAX_TOKENS 100
-#define TOKENSTOPRINT_LEN (3 * MAX_TOKENS + 2)
+#define TOKENCONTENT_LEN (TOKENSTR_MAXLEN + 30)
+#define TOKENSTOPRINT_LEN ((TOKENCONTENT_LEN + 2) * MAX_TOKENS + 1)
 //function prototypes
 /*
  * Function: void scanTokens(char *tokensFileStr, Automaton *automatonPtr,
@@ -33,8 +34,9 @@
  * detected in the source file. If any token is invalid or no valid tokens are
  * present, it stores the string "error."
  */
-void scanTokens(char *tokensFileStr, Automaton *automatonPtr, char
-    *tokensToPrint);
+void scanTokens(char *tokensFileStr, Automaton *automatonPtr,
+    char detectedTokensArr[MAX_TOKENS][TOKENCONTENT_LEN],
+    int *detectedTokensCount);
 /*
  * Function: void scan(char *tokensFileStr, int tokensFileStrLen,
  *     Automaton *automatonPtr, int *tokensFileIndex, int *currStatePtr,
@@ -70,7 +72,8 @@ void scanTokens(char *tokensFileStr, Automaton *automatonPtr, char
  */
 void scan(char *tokensFileStr, int tokensFileStrLen, Automaton *automatonPtr,
     int *tokensFileIndex, int *currStatePtr, int *tokenFinalStatesArr,
-    int *tokenFinalStatesArrIndex, bool *tokenComplete);
+    int *tokenFinalStatesArrIndex, bool *tokenComplete, int *tokenContentIndex,
+    int *tokenContentStrLen);
 /*
  * Function: int getNextState(Automaton *automatonPtr, int currState,
  *     char transChar)
@@ -88,7 +91,8 @@ void scan(char *tokensFileStr, int tokensFileStrLen, Automaton *automatonPtr,
  * and checks automatonPtr->transitionArr for a transition to a next state
  * matching these two parameters, and returns the next state if one exists.
  */
-int getNextState(Automaton *automatonPtr, int currState, char transChar);
+int getNextState(Automaton *automatonPtr, int currState, char transChar,
+    int tokensFileIndex, int *tokenContentIndex, int *tokenContentStrLen);
 /*
  * Function: void recognizeTokens(Automaton *automatonPtr,
  *     int *tokenFinalStatesArr, int tokenFinalStatesArrIndex,
@@ -112,5 +116,7 @@ int getNextState(Automaton *automatonPtr, int currState, char transChar);
  * present, it stores the string "error."
  */
 void recognizeTokens(Automaton *automatonPtr, int *tokenFinalStatesArr,
-    int tokenFinalStatesArrIndex, char *tokensToPrint);
+    int tokenFinalStatesArrIndex,
+    char detectedTokensArr[MAX_TOKENS][TOKENCONTENT_LEN],
+    int *detectedTokensCount, char *tokensFileStr, int tokensFileStrLen);
 #endif

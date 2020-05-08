@@ -1,4 +1,1 @@
-read A
-ident1f13r 001102.19 .99 :=
-readwrite
-+-+/ / *
+98798686.8767978796 read write := *()/

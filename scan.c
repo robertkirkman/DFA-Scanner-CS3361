@@ -37,11 +37,12 @@
  * present, it stores the string "error."
  */
 void scanTokens(char *tokensFileStr, Automaton *automatonPtr, char
-     *tokensToPrint)
+     detectedTokensArr[MAX_TOKENS][TOKENCONTENT_LEN], int *detectedTokensCount)
 {
     //shared index incremented by all the scanning functions to step through
     //the buffer
     int tokensFileIndex = 0, tokenFinalStatesArrIndex = 0,
+        tokenContentIndex = -1, tokenContentStrLen = 0,
         currState = automatonPtr->initialState;
     bool tokenComplete = false;
     //completely remove comments from the buffer before doing anything else
@@ -51,9 +52,11 @@ void scanTokens(char *tokensFileStr, Automaton *automatonPtr, char
     int tokensFileStrLen = strlen(tokensFileStr);
     scan(tokensFileStr, tokensFileStrLen, automatonPtr,
         &tokensFileIndex, &currState, tokenFinalStatesArr,
-        &tokenFinalStatesArrIndex, &tokenComplete);
+        &tokenFinalStatesArrIndex, &tokenComplete, &tokenContentIndex,
+        &tokenContentStrLen);
     recognizeTokens(automatonPtr, tokenFinalStatesArr,
-        tokenFinalStatesArrIndex, tokensToPrint);
+        tokenFinalStatesArrIndex, detectedTokensArr, detectedTokensCount,
+        tokensFileStr, tokensFileStrLen);
 }
 //This function is poor style because it has too many parameters. Combine some
 //of the parameters together into a data structure, and pass a pointer to an
@@ -101,12 +104,14 @@ void scanTokens(char *tokensFileStr, Automaton *automatonPtr, char
  */
 void scan(char *tokensFileStr, int tokensFileStrLen, Automaton *automatonPtr,
     int *tokensFileIndex, int *currStatePtr, int *tokenFinalStatesArr,
-    int *tokenFinalStatesArrIndex, bool *tokenComplete)
+    int *tokenFinalStatesArrIndex, bool *tokenComplete, int *tokenContentIndex,
+    int *tokenContentStrLen)
 {
     if (*tokensFileIndex < tokensFileStrLen)
     {
         int nextState = getNextState(automatonPtr, *currStatePtr,
-            tokensFileStr[*tokensFileIndex]);
+            tokensFileStr[*tokensFileIndex], *tokensFileIndex,
+            tokenContentIndex, tokenContentStrLen);
         if (nextState >= 0)
         {
             *tokenComplete = false;
@@ -114,16 +119,27 @@ void scan(char *tokensFileStr, int tokensFileStrLen, Automaton *automatonPtr,
             *currStatePtr = nextState;
             scan(tokensFileStr, tokensFileStrLen, automatonPtr,
                 tokensFileIndex, currStatePtr, tokenFinalStatesArr,
-                tokenFinalStatesArrIndex, tokenComplete);
+                tokenFinalStatesArrIndex, tokenComplete, tokenContentIndex,
+                tokenContentStrLen);
         }
-        else if (nextState == -1 && *tokenFinalStatesArrIndex < MAX_TOKENS)
+        else if (nextState == -1 && *tokenFinalStatesArrIndex < MAX_TOKENS - 2)
         {
             *tokenComplete = true;
             tokenFinalStatesArr[(*tokenFinalStatesArrIndex)++] = *currStatePtr;
             *currStatePtr = automatonPtr->initialState;
+            if (*tokenContentIndex >= 0)
+            {
+                tokenFinalStatesArr[(*tokenFinalStatesArrIndex)++] =
+                    *tokenContentStrLen;
+                tokenFinalStatesArr[(*tokenFinalStatesArrIndex)++] =
+                    *tokenContentIndex;
+                *tokenContentIndex = -1;
+                *tokenContentStrLen = 0;
+            }
             scan(tokensFileStr, tokensFileStrLen, automatonPtr,
                 tokensFileIndex, currStatePtr, tokenFinalStatesArr,
-                tokenFinalStatesArrIndex, tokenComplete);
+                tokenFinalStatesArrIndex, tokenComplete, tokenContentIndex,
+                tokenContentStrLen);
         }
         /*
          * Account for the newline characters (and for text files saved by
@@ -139,7 +155,8 @@ void scan(char *tokensFileStr, int tokensFileStrLen, Automaton *automatonPtr,
             (*tokensFileIndex)++;
             scan(tokensFileStr, tokensFileStrLen, automatonPtr,
                 tokensFileIndex, currStatePtr, tokenFinalStatesArr,
-                tokenFinalStatesArrIndex, tokenComplete);
+                tokenFinalStatesArrIndex, tokenComplete, tokenContentIndex,
+                tokenContentStrLen);
         }
         else
         {
@@ -172,21 +189,31 @@ void scan(char *tokensFileStr, int tokensFileStrLen, Automaton *automatonPtr,
  * and checks automatonPtr->transitionArr for a transition to a next state
  * matching these two parameters, and returns the next state if one exists.
  */
-int getNextState(Automaton *automatonPtr, int currState, char transChar)
+int getNextState(Automaton *automatonPtr, int currState, char transChar,
+    int tokensFileIndex, int *tokenContentIndex, int *tokenContentStrLen)
 {
     for (int i = 0; i < automatonPtr->transitionCount; i++)
     {
         //return the next state if the character matches or the requirements
         //of one of the special wildcard transition characters are fulfilled
-        if (currState == automatonPtr->transitionArr[i].currentState &&
-            (transChar == automatonPtr->transitionArr[i].transitionChar ||
-            (automatonPtr->transitionArr[i].transitionChar == '~' &&
-            isdigit(transChar)) ||
-            (automatonPtr->transitionArr[i].transitionChar == '`' &&
-            isalpha(transChar)) ||
-            (automatonPtr->transitionArr[i].transitionChar == '&' &&
-            isalnum(transChar))))
-            return automatonPtr->transitionArr[i].nextState;
+        if (currState == automatonPtr->transitionArr[i].currentState)
+        {
+            if (transChar == automatonPtr->transitionArr[i].transitionChar &&
+                transChar != '~' && transChar != '`' && transChar != '&')
+                return automatonPtr->transitionArr[i].nextState;
+            if ((automatonPtr->transitionArr[i].transitionChar == '~' &&
+                isdigit(transChar)) ||
+                (automatonPtr->transitionArr[i].transitionChar == '`' &&
+                isalpha(transChar)) ||
+                (automatonPtr->transitionArr[i].transitionChar == '&' &&
+                isalnum(transChar)) || transChar == '.')
+            {
+                if (*tokenContentIndex < 0)
+                    *tokenContentIndex = tokensFileIndex;
+                (*tokenContentStrLen)++;
+                return automatonPtr->transitionArr[i].nextState;
+            }
+        }
     }
     for (int i = 0; i < automatonPtr->finalStateCount; i++)
     {
@@ -217,6 +244,7 @@ int getNextState(Automaton *automatonPtr, int currState, char transChar)
  * detected in the source file. If any token is invalid or no valid tokens are
  * present, it stores the string "error."
  */
+/*
 void recognizeTokens(Automaton *automatonPtr, int *tokenFinalStatesArr,
     int tokenFinalStatesArrIndex, char *tokensToPrint)
 {
@@ -246,4 +274,49 @@ void recognizeTokens(Automaton *automatonPtr, int *tokenFinalStatesArr,
     }
     else
         strcpy(tokensToPrint, "error.");
+}
+*/
+void recognizeTokens(Automaton *automatonPtr, int *tokenFinalStatesArr,
+    int tokenFinalStatesArrIndex,
+    char detectedTokensArr[MAX_TOKENS][TOKENCONTENT_LEN],
+    int *detectedTokensCount, char *tokensFileStr, int tokensFileStrLen)
+{
+    if (*tokenFinalStatesArr >= 0)
+    {
+        int i = 0;
+        while (i < tokenFinalStatesArrIndex)
+        {
+            for(int j = 0; j < automatonPtr->tokenCount; j++)
+            {
+                if (tokenFinalStatesArr[i] ==
+                    automatonPtr->tokenArr[j].finalState &&
+                    *detectedTokensCount < MAX_TOKENS - 1)
+                {
+                    strcpy(detectedTokensArr[(*detectedTokensCount)++],
+                        automatonPtr->tokenArr[j].tokenStr);
+                    if (strcmp(detectedTokensArr[*detectedTokensCount - 1],
+                        "id") == 0 ||
+                        strcmp(detectedTokensArr[*detectedTokensCount - 1],
+                        "number") == 0)
+                    {
+                        char tokenContentStr[TOKENCONTENT_LEN];
+                        initStr(tokenContentStr, TOKENCONTENT_LEN);
+                        if (tokenFinalStatesArr[i + 1] +
+                            tokenFinalStatesArr[i + 2] < tokensFileStrLen)
+                        {
+                            getSubStr(tokensFileStr, tokenContentStr,
+                                tokenFinalStatesArr[i + 1],
+                                tokenFinalStatesArr[i + 2]);
+                            i += 2;
+                            strcpy(detectedTokensArr[(*detectedTokensCount)++],
+                            tokenContentStr);
+                        }
+                    }
+                }
+            }
+            i++;
+        }
+    }
+    else
+        strcpy(detectedTokensArr[0], "Error.");
 }

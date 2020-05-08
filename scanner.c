@@ -44,11 +44,15 @@ int main(int argc, char **argv)
     }
     buildAutomaton(automatonFileBuf, automatonPtr);
     free(automatonFileBuf);
-    char tokensToPrint[TOKENSTOPRINT_LEN];
-    initStr(tokensToPrint, TOKENSTOPRINT_LEN);
-    scanTokens(tokensFileBuf, automatonPtr, tokensToPrint);
+    int detectedTokensCount = 0;
+    char detectedTokensArr[MAX_TOKENS][TOKENCONTENT_LEN];
+    for (int i = 0; i < MAX_TOKENS; i++)
+        initStr(detectedTokensArr[i], TOKENCONTENT_LEN);
+    scanTokens(tokensFileBuf, automatonPtr, detectedTokensArr,
+        &detectedTokensCount);
     free(tokensFileBuf);
-    printf("%s\n", tokensToPrint);
+    for (int i = 0; i < detectedTokensCount; i++)
+        printf("%s\n", detectedTokensArr[i]);
     deleteAutomaton(automatonPtr);
     return 0;
 }
